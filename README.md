@@ -49,3 +49,8 @@ and open <http://localhost:8080> in your web browser.
 
 You can also try them in codesandbox.io:
 [01](https://codesandbox.io/s/github/zustandjs/zustand-valtio/tree/main/examples/01_counter)
+
+## Tweets
+
+- https://twitter.com/dai_shi/status/1772063521771270343
+- https://twitter.com/dai_shi/status/1772464889635684619
