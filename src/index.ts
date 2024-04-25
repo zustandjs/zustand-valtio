@@ -9,6 +9,12 @@ export function createWithProxy<T extends object>(
   proxyState: T;
 } {
   const proxyState = proxy(initialObject);
+  Object.keys(proxyState as object).forEach((key) => {
+    const fn = (proxyState as Record<string, unknown>)[key];
+    if (typeof fn === 'function') {
+      (proxyState as Record<string, unknown>)[key] = fn.bind(proxyState);
+    }
+  });
   const store = createStore(() => snapshot(proxyState));
   subscribe(proxyState, () => store.setState(snapshot(proxyState), true));
   const useProxyState = <Slice>(selector: (state: Snapshot<T>) => Slice) =>
