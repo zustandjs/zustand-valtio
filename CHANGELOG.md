@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2024-04-25
+
 ## Added
 
 - feat: bind state methods #3
