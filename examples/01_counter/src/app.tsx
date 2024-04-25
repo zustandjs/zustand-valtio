@@ -1,10 +1,10 @@
 import { createWithProxy } from 'zustand-valtio';
 
-const [useCounterState, counterState] = createWithProxy({ count: 0 });
+const useCounterState = createWithProxy({ count: 0 });
 
 const Counter = () => {
   const count = useCounterState((state) => state.count);
-  const inc = () => ++counterState.count;
+  const inc = () => ++useCounterState.proxyState.count;
   return (
     <>
       <div>Count: {count}</div>
