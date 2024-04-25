@@ -18,15 +18,25 @@ npm install zustand zustand-valtio valtio
 ```jsx
 import { createWithProxy } from 'zustand-valtio';
 
-const [useCounterState, counterState] = createWithProxy({ count: 0 });
+const useCounterState = createWithProxy({
+  count: 0,
+  inc() {
+    this.count++;
+  },
+});
 
 const Counter = () => {
   const count = useCounterState((state) => state.count);
-  const inc = () => ++counterState.count;
+  const inc = useCounterState((state) => state.inc);
+  // Or this works too
+  // const inc = () => ++useCounterState.proxyState.count;
   return (
-    <div>
-      {count} <button onClick={inc}>+1</button>
-    </div>
+    <>
+      <div>Count: {count}</div>
+      <button type="button" onClick={inc}>
+        +1
+      </button>
+    </>
   );
 };
 ```
