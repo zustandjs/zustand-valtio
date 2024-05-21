@@ -80,6 +80,9 @@ devDependencies:
   zustand:
     specifier: ^4.5.2
     version: 4.5.2(@types/react@18.2.79)(react@18.2.0)
+  zustand-valtio:
+    specifier: link:.
+    version: 'link:'
 
 packages:
 
