@@ -69,8 +69,8 @@ devDependencies:
     specifier: ^5.5.3
     version: 5.5.3
   valtio:
-    specifier: ^2.0.0-rc.0
-    version: 2.0.0-rc.0(@types/react@18.3.3)(react@18.3.1)
+    specifier: ^1.13.2
+    version: 1.13.2(@types/react@18.3.3)(react@18.3.1)
   vite:
     specifier: ^5.3.3
     version: 5.3.3(@types/node@20.14.10)
@@ -1291,6 +1291,14 @@ packages:
   /dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
+    dev: true
+
+  /derive-valtio@0.1.0(valtio@1.13.2):
+    resolution: {integrity: sha512-OCg2UsLbXK7GmmpzMXhYkdO64vhJ1ROUUGaTFyHjVwEdMEcTTRj7W1TxLbSBxdY8QLBPCcp66MTyaSy0RpO17A==}
+    peerDependencies:
+      valtio: '*'
+    dependencies:
+      valtio: 1.13.2(@types/react@18.3.3)(react@18.3.1)
     dev: true
 
   /dir-glob@3.0.1:
@@ -2680,8 +2688,8 @@ packages:
       react-is: 16.13.1
     dev: true
 
-  /proxy-compare@3.0.0:
-    resolution: {integrity: sha512-y44MCkgtZUCT9tZGuE278fB7PWVf7fRYy0vbRXAts2o5F0EfC4fIQrvQQGBJo1WJbFcVLXzApOscyJuZqHQc1w==}
+  /proxy-compare@2.6.0:
+    resolution: {integrity: sha512-8xuCeM3l8yqdmbPoYeLbrAXCBWu19XEYc5/F28f5qOaoAIMyfmBUkl5axiK+x9olUvRlcekvnm98AP9RDngOIw==}
     dev: true
 
   /punycode@2.3.1:
@@ -3185,12 +3193,12 @@ packages:
       react: 18.3.1
     dev: true
 
-  /valtio@2.0.0-rc.0(@types/react@18.3.3)(react@18.3.1):
-    resolution: {integrity: sha512-0DPHuNs8uSR9bRNDeYwRDln9tz1LQuFva/Vkoe88Cs7NMvuhPIDVwp0DWp+S8oRAAZYHugHHj8s9MKQ/K1aC4A==}
+  /valtio@1.13.2(@types/react@18.3.3)(react@18.3.1):
+    resolution: {integrity: sha512-Qik0o+DSy741TmkqmRfjq+0xpZBXi/Y6+fXZLn0xNF1z/waFMbE3rkivv5Zcf9RrMUp6zswf2J7sbh2KBlba5A==}
     engines: {node: '>=12.20.0'}
     peerDependencies:
-      '@types/react': '>=18.0.0'
-      react: '>=18.0.0'
+      '@types/react': '>=16.8'
+      react: '>=16.8'
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3198,8 +3206,10 @@ packages:
         optional: true
     dependencies:
       '@types/react': 18.3.3
-      proxy-compare: 3.0.0
+      derive-valtio: 0.1.0(valtio@1.13.2)
+      proxy-compare: 2.6.0
       react: 18.3.1
+      use-sync-external-store: 1.2.0(react@18.3.1)
     dev: true
 
   /vite-node@2.0.2(@types/node@20.14.10):

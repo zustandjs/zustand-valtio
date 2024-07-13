@@ -1,6 +1,12 @@
 import type { StateCreator, StoreApi, StoreMutatorIdentifier } from 'zustand';
 import { proxy, snapshot, subscribe } from 'valtio/vanilla';
-import type { Snapshot } from 'valtio/vanilla';
+
+// TODO replace with Valtio's Snapshot type in v2
+type Snapshot<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends object
+    ? { readonly [K in keyof T]: Snapshot<T[K]> }
+    : T;
 
 type StoreWithProxy<T> = {
   setState: never;
@@ -9,15 +15,13 @@ type StoreWithProxy<T> = {
 
 type Write<T, U> = Omit<T, keyof U> & U;
 
-type DeepWritable<T> = T extends object
-  ? {
-      -readonly [K in keyof T]: DeepWritable<T[K]>;
-    }
-  : T;
-
 type WithWithProxy<S, _A> = S extends { getState: () => Snapshot<infer T> }
   ? Write<S, StoreWithProxy<DeepWritable<T>>>
   : never;
+
+type DeepWritable<T> = T extends object
+  ? { -readonly [K in keyof T]: DeepWritable<T[K]> }
+  : T;
 
 declare module 'zustand/vanilla' {
   interface StoreMutators<S, A> {
@@ -45,7 +49,7 @@ const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
   const updateState = () => {
     if (!mutating) {
       ++updating;
-      set(snapshot(proxyState), true);
+      set(snapshot(proxyState) as Snapshot<typeof proxyState>, true);
       --updating;
     }
   };
@@ -82,7 +86,7 @@ const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
       });
     }
   });
-  return snapshot(proxyState);
+  return snapshot(proxyState) as Snapshot<typeof proxyState>;
 };
 
 export const withProxy = withProxyImpl as unknown as WithProxy;
