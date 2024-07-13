@@ -16,20 +16,23 @@ npm install zustand zustand-valtio valtio
 ## Usage
 
 ```jsx
-import { createWithProxy } from 'zustand-valtio';
+import { create } from 'zustand';
+import { withProxy } from 'zustand-valtio';
 
-const useCounterState = createWithProxy({
-  count: 0,
-  inc() {
-    this.count++;
-  },
-});
+const useCounterState = create(
+  withProxy({
+    count: 0,
+    inc() {
+      this.count++;
+    },
+  }),
+);
 
 const Counter = () => {
   const count = useCounterState((state) => state.count);
   const inc = useCounterState((state) => state.inc);
   // Or this works too
-  // const inc = () => ++useCounterState.proxyState.count;
+  // const inc = () => ++useCounterState.getProxyState().count;
   return (
     <>
       <div>Count: {count}</div>
@@ -60,6 +63,7 @@ and open <http://localhost:8080> in your web browser.
 You can also try them directly:
 [01](https://stackblitz.com/github/zustandjs/zustand-valtio/tree/main/examples/01_counter)
 [02](https://stackblitz.com/github/zustandjs/zustand-valtio/tree/main/examples/02_methods)
+[03](https://stackblitz.com/github/zustandjs/zustand-valtio/tree/main/examples/03_middleware)
 
 ## Tweets
 
