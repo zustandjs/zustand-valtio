@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2024-07-13
+
 ## Added
 
 - feat: withProxy #5
