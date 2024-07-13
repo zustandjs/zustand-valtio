@@ -41,7 +41,8 @@
     "test:types:examples": "tsc -p examples --noEmit",
     "test:spec": "vitest run",
     "examples:01_counter": "DIR=01_counter vite",
-    "examples:02_methods": "DIR=02_methods vite"
+    "examples:02_methods": "DIR=02_methods vite",
+    "examples:03_middleware": "DIR=03_middleware vite"
   },
   "keywords": [
     "react",

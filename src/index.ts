@@ -37,34 +37,51 @@ type WithProxyImpl = <T extends object>(
   initialObject: T,
 ) => StateCreator<Snapshot<T>, [], []>;
 
-const withProxyImpl: WithProxyImpl = (initialObject) => (set, _get, api) => {
+const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
   type AnyObject = Record<string, unknown>;
   const proxyState = proxy(initialObject);
   let mutating = 0;
+  let updating = 0;
   const updateState = () => {
     if (!mutating) {
+      ++updating;
       set(snapshot(proxyState), true);
+      --updating;
     }
   };
   Object.keys(proxyState).forEach((key) => {
     const fn = (proxyState as AnyObject)[key];
+    // TODO this doesn't handle nested objects
     if (typeof fn === 'function') {
       (proxyState as AnyObject)[key] = (...args: never[]) => {
         try {
-          mutating += 1;
+          ++mutating;
           return fn.apply(proxyState, args);
         } finally {
-          mutating -= 1;
+          --mutating;
           updateState();
         }
       };
     }
   });
-  type Api = StoreApi<Snapshot<typeof initialObject>> &
-    StoreWithProxy<typeof initialObject>;
+  type Api = StoreApi<unknown> & StoreWithProxy<typeof initialObject>;
   delete (api as Api).setState;
   (api as Api).getProxyState = () => proxyState;
   subscribe(proxyState, updateState, true);
+  api.subscribe(() => {
+    if (!updating) {
+      // HACK for persist hydration
+      const state = get() as AnyObject;
+      Object.keys(state).forEach((key) => {
+        const val = state[key];
+        // TODO this doesn't handle nested objects
+        if (typeof val !== 'function') {
+          // XXX this will throw if val is a snapshot
+          (proxyState as AnyObject)[key] = val;
+        }
+      });
+    }
+  });
   return snapshot(proxyState);
 };
 
