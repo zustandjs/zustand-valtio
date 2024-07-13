@@ -1,11 +1,14 @@
-import { createWithProxy } from 'zustand-valtio';
+import { create } from 'zustand';
+import { withProxy } from 'zustand-valtio';
 
-const useCounterState = createWithProxy({
-  count: 0,
-  inc() {
-    this.count++;
-  },
-});
+const useCounterState = create(
+  withProxy({
+    count: 0,
+    inc() {
+      this.count++;
+    },
+  }),
+);
 
 const Counter = () => {
   const count = useCounterState((state) => state.count);

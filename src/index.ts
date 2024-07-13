@@ -1,24 +1,71 @@
-import { createStore, useStore } from 'zustand';
+import type { StateCreator, StoreApi, StoreMutatorIdentifier } from 'zustand';
 import { proxy, snapshot, subscribe } from 'valtio/vanilla';
-import type { INTERNAL_Snapshot as Snapshot } from 'valtio/vanilla';
+import type { Snapshot } from 'valtio/vanilla';
 
-export function createWithProxy<T extends object>(
+type StoreWithProxy<T> = {
+  setState: never;
+  getProxyState: () => T;
+};
+
+type Write<T, U> = Omit<T, keyof U> & U;
+
+type DeepWritable<T> = T extends object
+  ? {
+      -readonly [K in keyof T]: DeepWritable<T[K]>;
+    }
+  : T;
+
+type WithWithProxy<S, _A> = S extends { getState: () => Snapshot<infer T> }
+  ? Write<S, StoreWithProxy<DeepWritable<T>>>
+  : never;
+
+declare module 'zustand/vanilla' {
+  interface StoreMutators<S, A> {
+    'zustand-valtio': WithWithProxy<S, A>;
+  }
+}
+
+type WithProxy = <
+  T extends object,
+  Mps extends [StoreMutatorIdentifier, unknown][] = [],
+  Mcs extends [StoreMutatorIdentifier, unknown][] = [],
+>(
   initialObject: T,
-): {
-  <Slice>(selector: (state: Snapshot<T>) => Slice): Slice;
-  proxyState: T;
-} {
+) => StateCreator<Snapshot<T>, Mps, [['zustand-valtio', never], ...Mcs]>;
+
+type WithProxyImpl = <T extends object>(
+  initialObject: T,
+) => StateCreator<Snapshot<T>, [], []>;
+
+const withProxyImpl: WithProxyImpl = (initialObject) => (set, _get, api) => {
+  type AnyObject = Record<string, unknown>;
   const proxyState = proxy(initialObject);
-  Object.keys(proxyState as object).forEach((key) => {
-    const fn = (proxyState as Record<string, unknown>)[key];
+  let mutating = 0;
+  const updateState = () => {
+    if (!mutating) {
+      set(snapshot(proxyState), true);
+    }
+  };
+  Object.keys(proxyState).forEach((key) => {
+    const fn = (proxyState as AnyObject)[key];
     if (typeof fn === 'function') {
-      (proxyState as Record<string, unknown>)[key] = fn.bind(proxyState);
+      (proxyState as AnyObject)[key] = (...args: never[]) => {
+        try {
+          mutating += 1;
+          return fn.apply(proxyState, args);
+        } finally {
+          mutating -= 1;
+          updateState();
+        }
+      };
     }
   });
-  const store = createStore(() => snapshot(proxyState));
-  subscribe(proxyState, () => store.setState(snapshot(proxyState), true));
-  const useProxyState = <Slice>(selector: (state: Snapshot<T>) => Slice) =>
-    useStore(store, selector);
-  useProxyState.proxyState = proxyState;
-  return useProxyState;
-}
+  type Api = StoreApi<Snapshot<typeof initialObject>> &
+    StoreWithProxy<typeof initialObject>;
+  delete (api as Api).setState;
+  (api as Api).getProxyState = () => proxyState;
+  subscribe(proxyState, updateState, true);
+  return snapshot(proxyState);
+};
+
+export const withProxy = withProxyImpl as unknown as WithProxy;
