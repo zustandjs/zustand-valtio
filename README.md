@@ -69,3 +69,4 @@ You can also try them directly:
 
 - https://twitter.com/dai_shi/status/1772063521771270343
 - https://twitter.com/dai_shi/status/1772464889635684619
+- https://x.com/dai_shi/status/1811982890202464399
