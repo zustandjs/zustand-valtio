@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2024-07-14
+
 ## Added
 
 - feat: support nested objects and slice pattern #7
