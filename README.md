@@ -64,6 +64,7 @@ You can also try them directly:
 [01](https://stackblitz.com/github/zustandjs/zustand-valtio/tree/main/examples/01_counter)
 [02](https://stackblitz.com/github/zustandjs/zustand-valtio/tree/main/examples/02_methods)
 [03](https://stackblitz.com/github/zustandjs/zustand-valtio/tree/main/examples/03_middleware)
+[04](https://stackblitz.com/github/zustandjs/zustand-valtio/tree/main/examples/04_slices)
 
 ## Tweets
 
