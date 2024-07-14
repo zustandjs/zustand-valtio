@@ -57,15 +57,17 @@ const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
     const fn = (proxyState as AnyObject)[key];
     // TODO this doesn't handle nested objects
     if (typeof fn === 'function') {
-      (proxyState as AnyObject)[key] = (...args: never[]) => {
-        try {
-          ++mutating;
-          return fn.apply(proxyState, args);
-        } finally {
-          --mutating;
-          updateState();
-        }
-      };
+      Object.defineProperty(proxyState, key, {
+        value: (...args: unknown[]) => {
+          try {
+            ++mutating;
+            return fn.apply(proxyState, args);
+          } finally {
+            --mutating;
+            updateState();
+          }
+        },
+      });
     }
   });
   type Api = StoreApi<unknown> & StoreWithProxy<typeof initialObject>;
@@ -80,7 +82,6 @@ const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
         const val = state[key];
         // TODO this doesn't handle nested objects
         if (typeof val !== 'function') {
-          // XXX this will throw if val is a snapshot
           (proxyState as AnyObject)[key] = val;
         }
       });
