@@ -1,8 +1,10 @@
 import type { StateCreator, StoreApi, StoreMutatorIdentifier } from 'zustand';
 import { proxy, snapshot, subscribe } from 'valtio/vanilla';
 
+type AnyFunction = (...args: never[]) => unknown;
+
 // TODO replace with Valtio's Snapshot type in v2
-type Snapshot<T> = T extends (...args: never[]) => unknown
+type Snapshot<T> = T extends AnyFunction
   ? T
   : T extends object
     ? { readonly [K in keyof T]: Snapshot<T[K]> }
@@ -44,6 +46,20 @@ type WithProxyImpl = <T extends object>(
 const isObject = (x: unknown): x is object =>
   typeof x === 'object' && x !== null && !(x instanceof Promise);
 
+const patchObjectMethods = <T extends object>(
+  proxyObject: T,
+  fn: (obj: object, key: string, fn: AnyFunction) => void,
+) => {
+  (Object.getOwnPropertyNames(proxyObject) as (keyof T)[]).forEach((key) => {
+    const value = proxyObject[key];
+    if (typeof value === 'function') {
+      fn(proxyObject, key as string, value as AnyFunction);
+    } else if (isObject(value)) {
+      patchObjectMethods(value, fn);
+    }
+  });
+};
+
 const applyChanges = <T extends object>(proxyObject: T, prev: T, next: T) => {
   (Object.getOwnPropertyNames(prev) as (keyof T)[]).forEach((key) => {
     if (!(key in next)) {
@@ -72,7 +88,6 @@ const applyChanges = <T extends object>(proxyObject: T, prev: T, next: T) => {
 };
 
 const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
-  type AnyObject = Record<string, unknown>;
   const proxyState = proxy(initialObject);
   let mutating = 0;
   let updating = 0;
@@ -83,22 +98,18 @@ const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
       --updating;
     }
   };
-  Object.keys(proxyState).forEach((key) => {
-    const fn = (proxyState as AnyObject)[key];
-    // TODO this doesn't handle nested objects
-    if (typeof fn === 'function') {
-      Object.defineProperty(proxyState, key, {
-        value: (...args: unknown[]) => {
-          try {
-            ++mutating;
-            return fn.apply(proxyState, args);
-          } finally {
-            --mutating;
-            updateState();
-          }
-        },
-      });
-    }
+  patchObjectMethods(proxyState, (obj, key, fn) => {
+    Object.defineProperty(obj, key, {
+      value: (...args: never[]) => {
+        try {
+          ++mutating;
+          return fn.apply(obj, args);
+        } finally {
+          --mutating;
+          updateState();
+        }
+      },
+    });
   });
   type Api = StoreApi<unknown> & StoreWithProxy<typeof initialObject>;
   delete (api as Api).setState;
