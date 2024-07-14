@@ -41,6 +41,36 @@ type WithProxyImpl = <T extends object>(
   initialObject: T,
 ) => StateCreator<Snapshot<T>, [], []>;
 
+const isObject = (x: unknown): x is object =>
+  typeof x === 'object' && x !== null && !(x instanceof Promise);
+
+const applyChanges = <T extends object>(proxyObject: T, prev: T, next: T) => {
+  (Object.getOwnPropertyNames(prev) as (keyof T)[]).forEach((key) => {
+    if (!(key in next)) {
+      delete proxyObject[key];
+    } else if (Object.is(prev[key], next[key])) {
+      // unchanged
+    } else if (
+      isObject(proxyObject[key]) &&
+      isObject(prev[key]) &&
+      isObject(next[key])
+    ) {
+      applyChanges(
+        proxyObject[key] as unknown as object,
+        prev[key] as unknown as object,
+        next[key] as unknown as object,
+      );
+    } else {
+      proxyObject[key] = next[key];
+    }
+  });
+  (Object.keys(next) as (keyof T)[]).forEach((key) => {
+    if (!(key in prev)) {
+      proxyObject[key] = next[key];
+    }
+  });
+};
+
 const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
   type AnyObject = Record<string, unknown>;
   const proxyState = proxy(initialObject);
@@ -77,14 +107,12 @@ const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
   api.subscribe(() => {
     if (!updating) {
       // HACK for persist hydration
-      const state = get() as AnyObject;
-      Object.keys(state).forEach((key) => {
-        const val = state[key];
-        // TODO this doesn't handle nested objects
-        if (typeof val !== 'function') {
-          (proxyState as AnyObject)[key] = val;
-        }
-      });
+      const state = get();
+      applyChanges(
+        proxyState,
+        snapshot(proxyState) as typeof proxyState,
+        state as typeof proxyState,
+      );
     }
   });
   return snapshot(proxyState) as Snapshot<typeof proxyState>;
