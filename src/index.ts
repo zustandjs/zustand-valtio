@@ -3,6 +3,10 @@ import { proxy, snapshot, subscribe } from 'valtio/vanilla';
 
 type AnyFunction = (...args: never[]) => unknown;
 
+type DeepWritable<T> = T extends object
+  ? { -readonly [K in keyof T]: DeepWritable<T[K]> }
+  : T;
+
 // TODO replace with Valtio's Snapshot type in v2
 type Snapshot<T> = T extends AnyFunction
   ? T
@@ -11,7 +15,6 @@ type Snapshot<T> = T extends AnyFunction
     : T;
 
 type StoreWithProxy<T> = {
-  setState: never;
   getProxyState: () => T;
 };
 
@@ -20,10 +23,6 @@ type Write<T, U> = Omit<T, keyof U> & U;
 type WithWithProxy<S, _A> = S extends { getState: () => Snapshot<infer T> }
   ? Write<S, StoreWithProxy<DeepWritable<T>>>
   : never;
-
-type DeepWritable<T> = T extends object
-  ? { -readonly [K in keyof T]: DeepWritable<T[K]> }
-  : T;
 
 declare module 'zustand/vanilla' {
   interface StoreMutators<S, A> {
@@ -112,17 +111,15 @@ const withProxyImpl: WithProxyImpl = (initialObject) => (set, get, api) => {
     });
   });
   type Api = StoreApi<unknown> & StoreWithProxy<typeof initialObject>;
-  delete (api as Api).setState;
   (api as Api).getProxyState = () => proxyState;
   subscribe(proxyState, updateState, true);
   api.subscribe(() => {
     if (!updating) {
       // HACK for persist hydration
-      const state = get();
       applyChanges(
         proxyState,
         snapshot(proxyState) as typeof proxyState,
-        state as typeof proxyState,
+        get() as typeof proxyState,
       );
     }
   });
