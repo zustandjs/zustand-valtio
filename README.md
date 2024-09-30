@@ -47,7 +47,7 @@ const Counter = () => {
 ## But, why?
 
 Zustand has `immer` middleware to update state mutably.
-Valtio has the same capability. Isn't the combination is sweet?
+Valtio has the same capability. Isn't the combination sweet?
 
 ## Examples
 
